@@ -1,0 +1,38 @@
+---
+title: "Lab Week 8"
+author: "Claire Powers"
+date: "3/8/2018"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+###Load packages
+```{r}
+library(tidyverse)
+library(sf)
+library(tmap)
+library(leaflet)
+library(spatstat)
+library(maptools)
+```
+
+### Column graph of Texas oil spills
+```{r}
+oil_spills <- read_csv("oil_spills.csv")
+
+df <- oil_spills %>% 
+  filter(`Accident State`=="TX" & `Accident Year`< 2017) %>% 
+  group_by(`Accident Year`) %>% 
+  summarise(Loss = sum(`Net Loss (Barrels)`))
+
+colnames(df) <- c("Year","Loss")
+
+#Column graph of loss over years
+
+ggplot(df, aes(x=Year, y =  Loss))+
+  geom_col()
+```
+
