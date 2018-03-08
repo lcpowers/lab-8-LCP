@@ -51,3 +51,39 @@ leaflet(oil_sf) %>%
   addMarkers()
 ```
 
+## tmap plot with the Texas state shapefile
+```{r}
+states <- st_read(dsn=".", layer = "states")
+
+tex_border <- states %>% 
+  filter(STATE_NAME == "Texas") %>% 
+  st_transform(4326)
+
+plot(tex_border)
+
+tm_shape(tex_border) + 
+  tm_polygons() +
+  tm_shape(oil_sf)+
+  tm_dots(size = 0.3)
+```
+### Convert the data to spatial point patterns(combination of the point data and the bounding window)
+
+-Have to convert this into point patter data with a window. This is an area of r with lots of potential, likely going to be more streamline soon. 
+
+```{r}
+# Convert back from sf into df type data
+spill_sp <- as(oil_sf,"Spatial")
+spill_ppp <- as(spill_sp,"ppp")
+
+#class(spill_ppp)
+
+# If we're going to do point pattern anaylysis we need to know where the points are, and what out window bounds are. 
+
+tx_sp <- as(tex_border, "Spatial")
+tx_owin <- as(tx_sp, "owin")
+
+# Combine these two things so that R can see the complete picture at once. 
+
+all_ppp <- ppp(spill_ppp$x, spill_ppp$y, window = tx_owin)
+```
+
