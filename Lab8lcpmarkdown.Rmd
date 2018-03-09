@@ -69,7 +69,6 @@ tm_shape(tex_border) +
 ### Convert the data to spatial point patterns(combination of the point data and the bounding window)
 
 -Have to convert this into point patter data with a window. This is an area of r with lots of potential, likely going to be more streamline soon. 
-
 ```{r}
 # Convert back from sf into df type data
 spill_sp <- as(oil_sf,"Spatial")
@@ -85,5 +84,57 @@ tx_owin <- as(tx_sp, "owin")
 # Combine these two things so that R can see the complete picture at once. 
 
 all_ppp <- ppp(spill_ppp$x, spill_ppp$y, window = tx_owin)
+```
+
+###A density plot:
+```{r}
+plot(density(all_ppp, sigma = 0.4))
+```
+
+
+### Quadrat test for spatial evenness
+```{r}
+oil_qt <- quadrat.test(all_ppp, nx = 5, ny = 5)
+oil_qt
+```
+
+## Super small p - value, reject the null hypothesis that data are CSR.
+
+```{r}
+plot(all_ppp)
+plot(oil_qt, add=TRUE, cex = 0.4)
+```
+
+## On the right, how many counts you would expect with CSR, on the left, how many were observed, and on the bottom, a standardized metric for the different between the expected cound and actual count. 
+
+## G-function for Nearest Neighbor Analysis. 
+```{r}
+r <- seq(0,1, by = 0.01)
+#Calculate for existing point pattern data calculate the g-function. 
+#Need to simulate CSR data to create something to compare our data to. If these were truly spatially random, what would they look like? 
+
+oil_gfun <- envelope(all_ppp, fun = Gest, r = r, nsim = 100)
+
+#plot the outsomes. What's stored in this is r(the lag for each of the values from .01 to 1), obs = how many values we within that distance, divided by the total number of observations. Theo is the theoretical value if points are CSR.
+
+ggplot(oil_gfun, aes(x = r, y = obs)) +
+  geom_line(color = "black") +
+  #compare to CSR 
+  geom_line(aes(x=r, y = theo), color = "red")
+  
+#Our data has a higher proportion of point pairs with lower distances between each other, than would exist in a CSR set of points. 
+```
+
+###Nearest neighbor using the L-function (Ripley's K, standardized)
+```{r}
+
+r2 <- seq(0,4, by = 0.1)
+
+oil_lfun <- envelope(all_ppp, fun = Lest, r = r2, nsim = 20, global = TRUE)
+
+ggplot(oil_lfun, aes(x = r2, y = obs)) +
+  geom_line(color = "black") +
+  geom_line(aes(x = r2, y = theo), color = "blue")
+
 ```
 
